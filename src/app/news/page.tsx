@@ -1,189 +1,163 @@
 'use client';
 
 import { useState } from 'react';
-import DashboardLayout from '@/components/DashboardLayout';
-import Card from '@/components/ui/Card';
-import NewsCard from '@/components/news/NewsCard';
-import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { Container, Row, Col, Card, Button, Badge } from 'react-bootstrap';
+import { useNewsData } from '@/utils/useNewsData';
+import { timeAgo } from '@/utils/formatters';
+import ClientOnly from '@/components/ClientOnly';
 
-const categories = ['All', 'Bitcoin', 'Ethereum', 'Altcoins', 'NFTs', 'DeFi', 'Regulation', 'Technology', 'Business'];
-
-// Extended mock data for news
-const newsData = [
-  {
-    id: 1,
-    title: 'Bitcoin Surges Past $60,000 as Institutional Adoption Accelerates',
-    summary: 'Bitcoin has broken through the $60,000 barrier as more institutional investors add the cryptocurrency to their portfolios.',
-    source: 'CryptoNews',
-    date: 'May 15, 2023',
-    readTime: '3 min read',
-    imageUrl: '/news1.jpg',
-    tags: ['bitcoin', 'markets', 'institutional'],
-    category: 'Bitcoin'
-  },
-  {
-    id: 2,
-    title: 'Ethereum 2.0 Upgrade: What You Need to Know About the Merge',
-    summary: 'The long-awaited Ethereum 2.0 upgrade is approaching. Here\'s what you need to know about the transition to proof-of-stake.',
-    source: 'BlockchainInsider',
-    date: 'May 14, 2023',
-    readTime: '5 min read',
-    imageUrl: '/news2.jpg',
-    tags: ['ethereum', 'technology', 'eth2.0'],
-    category: 'Ethereum'
-  },
-  {
-    id: 3,
-    title: 'SEC Approves First Spot Bitcoin ETF in Historic Decision',
-    summary: 'The Securities and Exchange Commission has approved the first spot Bitcoin ETF, marking a significant milestone for cryptocurrency adoption.',
-    source: 'CryptoDaily',
-    date: 'May 12, 2023',
-    readTime: '4 min read',
-    imageUrl: '/news3.jpg',
-    tags: ['bitcoin', 'regulation', 'etf'],
-    category: 'Bitcoin'
-  },
-  {
-    id: 4,
-    title: 'Solana Ecosystem Expands with New DeFi Projects',
-    summary: 'The Solana blockchain continues to grow with several new DeFi projects launching on the high-performance network.',
-    source: 'DeFiPulse',
-    date: 'May 10, 2023',
-    readTime: '3 min read',
-    imageUrl: '/news4.jpg',
-    tags: ['solana', 'defi', 'altcoins'],
-    category: 'Altcoins'
-  },
-  {
-    id: 5,
-    title: 'NFT Market Shows Signs of Recovery After Months of Decline',
-    summary: 'The NFT market is showing signs of recovery with increased trading volume and new collections gaining traction.',
-    source: 'NFTWorld',
-    date: 'May 9, 2023',
-    readTime: '4 min read',
-    imageUrl: '/news5.jpg',
-    tags: ['nft', 'markets', 'art'],
-    category: 'NFTs'
-  },
-  {
-    id: 6,
-    title: 'Central Banks Accelerate CBDC Development Amid Crypto Boom',
-    summary: 'Central banks around the world are accelerating their development of central bank digital currencies (CBDCs) in response to the growing popularity of cryptocurrencies.',
-    source: 'FinanceToday',
-    date: 'May 8, 2023',
-    readTime: '6 min read',
-    imageUrl: '/news6.jpg',
-    tags: ['cbdc', 'regulation', 'central-banks'],
-    category: 'Regulation'
-  },
-  {
-    id: 7,
-    title: 'DeFi Protocol Aave Launches V3 with Enhanced Security Features',
-    summary: 'Decentralized finance protocol Aave has launched its V3 update with enhanced security features and improved capital efficiency.',
-    source: 'DeFiInsider',
-    date: 'May 7, 2023',
-    readTime: '4 min read',
-    imageUrl: '/news7.jpg',
-    tags: ['defi', 'aave', 'security'],
-    category: 'DeFi'
-  },
-  {
-    id: 8,
-    title: 'Crypto Mining Companies Shift to Renewable Energy Sources',
-    summary: 'Major cryptocurrency mining companies are increasingly shifting to renewable energy sources amid environmental concerns.',
-    source: 'CryptoMining',
-    date: 'May 6, 2023',
-    readTime: '5 min read',
-    imageUrl: '/news8.jpg',
-    tags: ['mining', 'environment', 'bitcoin'],
-    category: 'Bitcoin'
-  },
-];
-
-export default function NewsPage() {
-  const [activeCategory, setActiveCategory] = useState('All');
-  const [searchQuery, setSearchQuery] = useState('');
+export default function News() {
+  const { newsItems } = useNewsData();
+  const [selectedCategory, setSelectedCategory] = useState('all');
   
-  const filteredNews = newsData
-    .filter(news => activeCategory === 'All' || news.category === activeCategory)
-    .filter(news => 
-      searchQuery === '' || 
-      news.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      news.summary.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      news.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
-    );
+  // Categories for filtering
+  const categories = ['all', 'bitcoin', 'ethereum', 'defi', 'nft', 'regulation'];
+  
+  // Filter news based on selected category
+  const filteredNews = selectedCategory === 'all' 
+    ? newsItems 
+    : newsItems.filter(news => news.title.toLowerCase().includes(selectedCategory));
+  
+  // Featured news (first item)
+  const featuredNews = newsItems[0];
+  
+  // Latest news (remaining items)
+  const latestNews = newsItems.slice(1);
+
+  // Function to handle image loading errors
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    e.currentTarget.src = '/images/placeholders/crypto-news.svg';
+  };
+
+  // Fallback image URL
+  const fallbackImageUrl = '/images/placeholders/crypto-news.svg';
 
   return (
-    <DashboardLayout>
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">Crypto News</h1>
-        <p className="text-text-gray">Stay updated with the latest cryptocurrency news and insights</p>
-      </div>
-      
-      <div className="mb-6">
-        <Card>
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-            <div className="flex overflow-x-auto hide-scrollbar gap-2 pb-2">
-              {categories.map((category) => (
-                <button
+    <ClientOnly>
+      <Container fluid className="py-4">
+        <Row className="mb-4">
+          <Col>
+            <h1 className="mb-3">Crypto News</h1>
+            <p className="text-muted">Stay updated with the latest cryptocurrency news and insights</p>
+          </Col>
+        </Row>
+        
+        {/* Categories */}
+        <Row className="mb-4">
+          <Col>
+            <div className="d-flex flex-wrap gap-2">
+              {categories.map(category => (
+                <Button 
                   key={category}
-                  className={`px-4 py-1.5 text-sm rounded-full whitespace-nowrap transition-colors ${
-                    activeCategory === category 
-                      ? 'bg-gradient-primary text-white' 
-                      : 'bg-gray-800 text-text-gray hover:text-white'
-                  }`}
-                  onClick={() => setActiveCategory(category)}
+                  variant={selectedCategory === category ? 'primary' : 'outline-secondary'}
+                  onClick={() => setSelectedCategory(category)}
+                  className="text-capitalize"
                 >
                   {category}
-                </button>
+                </Button>
               ))}
             </div>
-            <div className="mt-4 md:mt-0 relative w-full md:w-auto">
-              <input 
-                type="text" 
-                placeholder="Search news..." 
-                className="bg-gray-800 text-white rounded-lg pl-10 pr-4 py-2 w-full md:w-64 focus:outline-none focus:ring-2 focus:ring-primary-cyan"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-text-gray" />
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {filteredNews.map((news) => (
-              <NewsCard
-                key={news.id}
-                title={news.title}
-                summary={news.summary}
-                source={news.source}
-                date={news.date}
-                readTime={news.readTime}
-                imageUrl={news.imageUrl}
-                tags={news.tags}
-              />
-            ))}
-          </div>
-          
-          {filteredNews.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-text-gray">No news articles found matching your criteria.</p>
-            </div>
-          )}
-          
-          {filteredNews.length > 0 && (
-            <div className="mt-6 flex justify-center">
-              <div className="flex">
-                <button className="px-4 py-2 bg-gray-800 rounded-l-lg text-text-gray hover:text-white">Previous</button>
-                <button className="px-4 py-2 bg-gray-700 text-white">1</button>
-                <button className="px-4 py-2 bg-gray-800 text-text-gray hover:text-white">2</button>
-                <button className="px-4 py-2 bg-gray-800 text-text-gray hover:text-white">3</button>
-                <button className="px-4 py-2 bg-gray-800 rounded-r-lg text-text-gray hover:text-white">Next</button>
-              </div>
-            </div>
-          )}
-        </Card>
-      </div>
-    </DashboardLayout>
+          </Col>
+        </Row>
+        
+        {/* Featured News */}
+        {featuredNews && (
+          <Row className="mb-5">
+            <Col>
+              <Card className="bg-secondary border-0 shadow-sm overflow-hidden">
+                <Row className="g-0">
+                  <Col md={7}>
+                    <div className="position-relative" style={{ height: '100%', minHeight: '300px' }}>
+                      <img 
+                        src={featuredNews.imageUrl || fallbackImageUrl}
+                        alt={featuredNews.title}
+                        style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+                        onError={handleImageError}
+                      />
+                      <div 
+                        className="position-absolute bottom-0 start-0 w-100 p-3"
+                        style={{ 
+                          background: 'linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0))',
+                          zIndex: 1
+                        }}
+                      >
+                        <Badge bg="primary" className="mb-2">Featured</Badge>
+                        <h3 className="text-white mb-2">{featuredNews.title}</h3>
+                        <div className="d-flex text-white small">
+                          <span>{featuredNews.source}</span>
+                          <span className="mx-2">•</span>
+                          <span>{timeAgo(featuredNews.date)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </Col>
+                  <Col md={5}>
+                    <Card.Body className="d-flex flex-column h-100">
+                      <h4>{featuredNews.title}</h4>
+                      <p className="text-muted mb-4">
+                        The cryptocurrency market continues to evolve rapidly, with new developments 
+                        shaping the future of digital assets. This article explores the latest trends 
+                        and their potential impact on investors and the broader financial ecosystem.
+                      </p>
+                      <div className="mt-auto">
+                        <div className="d-flex text-muted small mb-3">
+                          <span>{featuredNews.source}</span>
+                          <span className="mx-2">•</span>
+                          <span>{timeAgo(featuredNews.date)}</span>
+                        </div>
+                        <Button variant="primary">Read Full Article</Button>
+                      </div>
+                    </Card.Body>
+                  </Col>
+                </Row>
+              </Card>
+            </Col>
+          </Row>
+        )}
+        
+        {/* Latest News */}
+        <Row className="mb-4">
+          <Col>
+            <h3 className="mb-4">Latest News</h3>
+          </Col>
+        </Row>
+        
+        <Row>
+          {filteredNews.slice(1).map((news) => (
+            <Col key={news.id} md={6} lg={4} className="mb-4">
+              <Card className="news-card bg-secondary border-0 shadow-sm h-100">
+                <div className="position-relative" style={{ height: '200px' }}>
+                  <img 
+                    src={news.imageUrl || fallbackImageUrl}
+                    alt={news.title}
+                    style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+                    onError={handleImageError}
+                  />
+                  <div className="position-absolute top-0 end-0 m-2" style={{ zIndex: 1 }}>
+                    <Badge bg="dark" className="px-2 py-1 opacity-75">
+                      {news.source}
+                    </Badge>
+                  </div>
+                </div>
+                <Card.Body>
+                  <Card.Title className="mb-3">{news.title}</Card.Title>
+                  <div className="d-flex justify-content-between align-items-center">
+                    <small className="text-muted">{timeAgo(news.date)}</small>
+                    <Button variant="outline-primary" size="sm">Read More</Button>
+                  </div>
+                </Card.Body>
+              </Card>
+            </Col>
+          ))}
+        </Row>
+        
+        {/* Load More Button */}
+        <Row className="mt-4">
+          <Col className="text-center">
+            <Button variant="outline-primary" size="lg">Load More News</Button>
+          </Col>
+        </Row>
+      </Container>
+    </ClientOnly>
   );
 } 

@@ -1,167 +1,183 @@
 'use client';
 
-import DashboardLayout from '@/components/DashboardLayout';
-import { Row, Col, Card, Table, Button } from 'react-bootstrap';
-import { ArrowUpIcon, ArrowDownIcon, PlusIcon } from '@heroicons/react/24/solid';
+import { Container, Row, Col, Card, Button, Table } from 'react-bootstrap';
+import { ArrowUpIcon, ArrowDownIcon, ArrowsRightLeftIcon } from '@heroicons/react/24/solid';
+import { formatCurrency, formatNumber, formatPercentage, timeAgo } from '@/utils/formatters';
+import { usePortfolioData } from '@/utils/usePortfolioData';
+import ClientOnly from '@/components/ClientOnly';
 
-export default function PortfolioPage() {
+export default function Portfolio() {
+  const { portfolioData, transactionHistory, totalValue, totalProfitLoss, profitLossPercentage } = usePortfolioData(3000);
+
   return (
-    <DashboardLayout>
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <div>
-          <h1 className="fs-2 fw-bold mb-1">Portfolio</h1>
-          <p className="text-muted">Track and manage your crypto investments</p>
-        </div>
-        <Button variant="primary" className="d-flex align-items-center">
-          <PlusIcon style={{ width: '16px', height: '16px', marginRight: '8px' }} />
-          Add Asset
-        </Button>
-      </div>
-
-      {/* Stats Row */}
-      <Row className="g-4 mb-4">
-        <Col md={4}>
-          <div className="stat-card">
-            <div className="stat-card-title">Total Balance</div>
-            <div className="stat-card-value">$24,518.29</div>
-            <div className="stat-card-change positive-change">
-              <ArrowUpIcon style={{ width: '14px', height: '14px', marginRight: '4px' }} />
-              <span>+2.3% ($563.24)</span>
-            </div>
-          </div>
-        </Col>
-        <Col md={4}>
-          <div className="stat-card">
-            <div className="stat-card-title">24h Change</div>
-            <div className="stat-card-value">+$563.24</div>
-            <div className="stat-card-change positive-change">
-              <ArrowUpIcon style={{ width: '14px', height: '14px', marginRight: '4px' }} />
-              <span>+2.3%</span>
-            </div>
-          </div>
-        </Col>
-        <Col md={4}>
-          <div className="stat-card">
-            <div className="stat-card-title">Total Assets</div>
-            <div className="stat-card-value">8</div>
-            <div className="stat-card-change">
-              <span className="text-muted">Across 3 blockchains</span>
-            </div>
-          </div>
+    <Container fluid className="p-4">
+      {/* Portfolio Overview */}
+      <Row className="mb-4">
+        <Col>
+          <h2 className="mb-4">Portfolio Overview</h2>
+          <ClientOnly>
+            <Row>
+              <Col md={4} className="mb-3">
+                <Card className="stat-card h-100">
+                  <Card.Body>
+                    <div className="stat-card-title">Total Value</div>
+                    <div className="stat-card-value">{formatCurrency(totalValue)}</div>
+                    <div className={`stat-card-change ${profitLossPercentage >= 0 ? 'positive-change' : 'negative-change'}`}>
+                      {profitLossPercentage >= 0 ? (
+                        <ArrowUpIcon className="icon-sm me-1" />
+                      ) : (
+                        <ArrowDownIcon className="icon-sm me-1" />
+                      )}
+                      {formatPercentage(Math.abs(profitLossPercentage))}
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
+              <Col md={4} className="mb-3">
+                <Card className="stat-card h-100">
+                  <Card.Body>
+                    <div className="stat-card-title">24h Profit/Loss</div>
+                    <div className="stat-card-value">{formatCurrency(totalProfitLoss)}</div>
+                    <div className={`stat-card-change ${profitLossPercentage >= 0 ? 'positive-change' : 'negative-change'}`}>
+                      {profitLossPercentage >= 0 ? (
+                        <ArrowUpIcon className="icon-sm me-1" />
+                      ) : (
+                        <ArrowDownIcon className="icon-sm me-1" />
+                      )}
+                      {formatPercentage(Math.abs(profitLossPercentage))}
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
+              <Col md={4} className="mb-3">
+                <Card className="stat-card h-100">
+                  <Card.Body>
+                    <div className="stat-card-title">Total Assets</div>
+                    <div className="stat-card-value">{portfolioData.length}</div>
+                    <div className="text-muted">Active Positions</div>
+                  </Card.Body>
+                </Card>
+              </Col>
+            </Row>
+          </ClientOnly>
         </Col>
       </Row>
 
-      {/* Portfolio Performance */}
-      <Card className="mb-4 bg-dark border-secondary">
-        <Card.Body>
-          <h2 className="fs-5 fw-bold mb-4">Portfolio Performance</h2>
-          <div className="d-flex justify-content-center align-items-center" style={{ height: '250px' }}>
-            {/* Placeholder for chart */}
-            <div className="text-center text-muted">
-              <p>Chart will be displayed here</p>
-            </div>
-          </div>
-        </Card.Body>
-      </Card>
+      {/* Portfolio Assets */}
+      <Row className="mb-4">
+        <Col>
+          <Card className="bg-secondary">
+            <Card.Body>
+              <div className="d-flex justify-content-between align-items-center mb-4">
+                <h2 className="mb-0">Your Assets</h2>
+                <div>
+                  <Button variant="primary" className="me-2">
+                    <ArrowsRightLeftIcon className="icon-sm me-2" />
+                    Swap
+                  </Button>
+                  <Button variant="outline-light">
+                    View All
+                  </Button>
+                </div>
+              </div>
+              <ClientOnly>
+                <div className="table-responsive">
+                  <Table className="table">
+                    <thead>
+                      <tr>
+                        <th>Asset</th>
+                        <th>Amount</th>
+                        <th>Value</th>
+                        <th>Profit/Loss</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {portfolioData.map((asset) => (
+                        <tr key={asset.symbol}>
+                          <td>
+                            <div className="d-flex align-items-center">
+                              <div className="crypto-icon me-2">{asset.symbol.charAt(0)}</div>
+                              <div>
+                                <div className="fw-bold">{asset.asset}</div>
+                                <div className="text-muted">{asset.symbol}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <div className="fw-bold">{formatNumber(asset.amount)}</div>
+                            <div className="text-muted">{asset.symbol}</div>
+                          </td>
+                          <td>
+                            <div className="fw-bold">{formatCurrency(asset.value)}</div>
+                          </td>
+                          <td>
+                            <div className={asset.profitLoss >= 0 ? 'text-success' : 'text-danger'}>
+                              {asset.profitLoss >= 0 ? '↑' : '↓'} {formatPercentage(Math.abs(asset.profitLoss))}
+                            </div>
+                          </td>
+                          <td>
+                            <Button variant="outline-primary" size="sm" className="me-2">Trade</Button>
+                            <Button variant="outline-light" size="sm">View</Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                </div>
+              </ClientOnly>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
 
-      {/* Assets Table */}
-      <Card className="bg-dark border-secondary">
-        <Card.Body>
-          <h2 className="fs-5 fw-bold mb-4">Your Assets</h2>
-          <Table responsive className="table-dark">
-            <thead>
-              <tr>
-                <th>Asset</th>
-                <th>Price</th>
-                <th>Holdings</th>
-                <th>Value</th>
-                <th>24h Change</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>
-                  <div className="d-flex align-items-center">
-                    <div className="crypto-icon me-2">B</div>
-                    <div>
-                      <div className="fw-medium text-light">Bitcoin</div>
-                      <div className="text-muted small">BTC</div>
-                    </div>
-                  </div>
-                </td>
-                <td>$61,245.32</td>
-                <td>0.2345 BTC</td>
-                <td>$14,362.03</td>
-                <td>
-                  <div className="price-change positive">
-                    <ArrowUpIcon style={{ width: '12px', height: '12px', marginRight: '4px' }} />
-                    2.4%
-                  </div>
-                </td>
-                <td>
-                  <div className="d-flex gap-2">
-                    <Button variant="outline-primary" size="sm">Trade</Button>
-                    <Button variant="outline-light" size="sm">View</Button>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <div className="d-flex align-items-center">
-                    <div className="crypto-icon me-2">E</div>
-                    <div>
-                      <div className="fw-medium text-light">Ethereum</div>
-                      <div className="text-muted small">ETH</div>
-                    </div>
-                  </div>
-                </td>
-                <td>$3,421.67</td>
-                <td>1.8765 ETH</td>
-                <td>$6,420.76</td>
-                <td>
-                  <div className="price-change positive">
-                    <ArrowUpIcon style={{ width: '12px', height: '12px', marginRight: '4px' }} />
-                    1.8%
-                  </div>
-                </td>
-                <td>
-                  <div className="d-flex gap-2">
-                    <Button variant="outline-primary" size="sm">Trade</Button>
-                    <Button variant="outline-light" size="sm">View</Button>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <div className="d-flex align-items-center">
-                    <div className="crypto-icon me-2">S</div>
-                    <div>
-                      <div className="fw-medium text-light">Solana</div>
-                      <div className="text-muted small">SOL</div>
-                    </div>
-                  </div>
-                </td>
-                <td>$142.89</td>
-                <td>26.2345 SOL</td>
-                <td>$3,747.50</td>
-                <td>
-                  <div className="price-change negative">
-                    <ArrowDownIcon style={{ width: '12px', height: '12px', marginRight: '4px' }} />
-                    3.2%
-                  </div>
-                </td>
-                <td>
-                  <div className="d-flex gap-2">
-                    <Button variant="outline-primary" size="sm">Trade</Button>
-                    <Button variant="outline-light" size="sm">View</Button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </Table>
-        </Card.Body>
-      </Card>
-    </DashboardLayout>
+      {/* Recent Transactions */}
+      <Row>
+        <Col>
+          <Card className="bg-secondary">
+            <Card.Body>
+              <div className="d-flex justify-content-between align-items-center mb-4">
+                <h2 className="mb-0">Recent Transactions</h2>
+                <Button variant="outline-light">View All</Button>
+              </div>
+              <ClientOnly>
+                <div className="table-responsive">
+                  <Table className="table">
+                    <thead>
+                      <tr>
+                        <th>Type</th>
+                        <th>Asset</th>
+                        <th>Amount</th>
+                        <th>Price</th>
+                        <th>Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {transactionHistory.map((tx) => (
+                        <tr key={tx.id}>
+                          <td>
+                            <div className={`transaction-icon ${tx.type}`}>
+                              {tx.type === 'buy' ? (
+                                <ArrowDownIcon className="icon-sm" />
+                              ) : (
+                                <ArrowUpIcon className="icon-sm" />
+                              )}
+                            </div>
+                          </td>
+                          <td>{tx.asset}</td>
+                          <td>{formatNumber(tx.amount)}</td>
+                          <td>{formatCurrency(tx.price)}</td>
+                          <td>{timeAgo(tx.date)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                </div>
+              </ClientOnly>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+    </Container>
   );
 } 

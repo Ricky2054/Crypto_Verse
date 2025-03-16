@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import { Inter } from 'next/font/google';
+import Script from 'next/script';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import "./globals.css";
 import "./custom-styles.css";
-import { Inter } from 'next/font/google';
-import Script from 'next/script';
+import MainNavbar from '@/components/Navbar';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -19,23 +20,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-        {/* Force reload CSS files */}
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
-      </head>
       <body className={`${inter.className} bg-dark text-light`}>
-        {children}
-        
-        {/* Add debugging script */}
-        <Script id="debug-script" strategy="afterInteractive">
-          {`
-            console.log('Layout script loaded');
-            document.addEventListener('DOMContentLoaded', function() {
-              console.log('DOM fully loaded');
-              console.log('Body classes:', document.body.className);
-            });
-          `}
-        </Script>
+        <MainNavbar />
+        <main>
+          {children}
+        </main>
+        <Script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );
