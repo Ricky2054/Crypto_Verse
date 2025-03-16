@@ -3,8 +3,17 @@
 import Link from 'next/link';
 import { ArrowRightIcon, ChartBarIcon, CurrencyDollarIcon, GlobeAltIcon } from '@heroicons/react/24/outline';
 import { Container, Row, Col, Card, Nav, Navbar, Button } from 'react-bootstrap';
+import { useEffect } from 'react';
 
 export default function HomePage() {
+  useEffect(() => {
+    // Log to console to verify the component is rendering
+    console.log('HomePage component rendered');
+    
+    // Add a class to the body to verify the component is mounted
+    document.body.classList.add('homepage-loaded');
+  }, []);
+
   return (
     <div className="min-vh-100 bg-dark">
       {/* Navigation */}
